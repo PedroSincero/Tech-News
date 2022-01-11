@@ -1,24 +1,24 @@
 import requests
 import time
-from parsel import Selector
+
+# from parsel import Selector
 
 
 # Requisito 1
 # https://www.tecmundo.com.br/novidades
+# fetch("https://www.tecmundo.com.br/novidades")
 
 
 def fetch(url):
     time.sleep(1)
     try:
         response = requests.get(url, timeout=3)
-        print(response.text)
-        if response.status_code == 200:
-            return response.text
+        if not response.status_code == 200:
+            return None
+        return response.text
     except requests.Timeout:
         return None
 
-
-fetch("https://www.tecmundo.com.br/novidades")
 
 # Requisito 2
 
