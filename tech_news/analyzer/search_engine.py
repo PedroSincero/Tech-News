@@ -21,25 +21,31 @@ def search_by_title(title):
 # Requisito 7
 def search_by_date(date):
     try:
-        print(date)
-# ref https://www.programiz.com/python-programming/datetime/strptime
+        # ref https://www.programiz.com/python-programming/datetime/strptime
         datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
         raise ValueError("Data inválida")
-    print("lolo")
-# ref >> https://docs.mongodb.com/manual/reference/operator/query/regex/
+    # ref >> https://docs.mongodb.com/manual/reference/operator/query/regex/
     find_date = list(db.news.find({"timestamp": {"$regex": date}}))
 
     result = []
     for search in find_date:
         result.append((search["title"], search["url"]))
-    print(result)
     return result
 
 
 # Requisito 8
 def search_by_source(source):
-    """Seu código deve vir aqui"""
+    # sources
+    find_source = list(
+        db.news.find({"sources": re.compile(source, re.IGNORECASE)})
+    )
+    print(find_source)
+
+    result = []
+    for search in find_source:
+        result.append((search["title"], search["url"]))
+    return result
 
 
 # Requisito 9
