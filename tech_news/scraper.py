@@ -46,43 +46,98 @@ def scrape_next_page_link(html_content):
 
 
 # Requisito 4
-def scrape_noticia(html_content):
 
+
+def url_selector(html_content):
     selector = Selector(text=html_content)
-    data = {}
+    return selector.css("head > link[rel=canonical] ::attr(href)").get()
 
-    data["url"] = selector.css("head > link[rel=canonical] ::attr(href)").get()
-    data["title"] = selector.css("#js-article-title ::text").get()
-    data["timestamp"] = selector.css("#js-article-date ::attr(datetime)").get()
-    data["writer"] = (
-        selector.css(".tec--author__info__link ::text").get().strip()
+
+def title_selector(html_content):
+    selector = Selector(text=html_content)
+    return selector.css("#js-article-title ::text").get()
+
+
+def timestamp_selector(html_content):
+    selector = Selector(text=html_content)
+    return selector.css("#js-article-date ::attr(datetime)").get()
+
+
+def write_selector(html_content):
+    selector = Selector(text=html_content)
+    query_selectors = [
+        ".tec--timestamp__item.z--font-bold ::text",
+        ".tec--author__info__link ::text",
+        "div > p.z--m-none.z--truncate.z--font-bold::text",
+    ]
+
+    for query in query_selectors:
+        write = selector.css(query).get()
+        if write is not None:
+            return write.strip()
+    return None
+
+
+def shares_count_selector(html_content):
+    selector = Selector(text=html_content)
+    shares_count = selector.css(".tec--toolbar > div:nth-child(1)::text").get()
+    if shares_count is not None:
+        result = shares_count.strip().split(" ")[0]
+        return int(result)
+    return 0
+
+
+def summary_selector(html_content):
+    selector = Selector(text=html_content)
+    summary = "".join(
+        selector.css(".p402_premium > p:nth-child(1) ::text").getall()
     )
-    write = selector.css(".tec--author__info__link ::text").get().strip()
-    data["shares_count"] = int(
-        selector.css(".tec--toolbar > div:nth-child(1) ::text")
-        .get()
-        .split()[0]
-    )
-    data["comments_count"] = int(selector.css(
-        "#js-comments-btn ::attr(data-count)"
-    ).get())
-    data["summary"] = "".join(
-        selector.css(
-            ".tec--article__body.z--px-16.p402_premium > p:nth-child(1) ::text"
-        ).getall()
-    )
-    select_sources = selector.css(".z--mb-16.z--px-16 > div ::text").getall()
-    remove_spaces_sources = list(
-        map(lambda x: x.strip(), select_sources)
-    )
-    data["sources"] = list(filter(lambda x: x != "", remove_spaces_sources))
+    if summary is not None:
+        return summary
+    return None
+
+
+def summary_sources(html_content):
+    selector = Selector(text=html_content)
+    query_selectors = [
+        ".z--mb-16 > div > a ::text",
+        ".z--mb-16.z--px-16 > div ::text",
+    ]
+    for query in query_selectors:
+        sources = selector.css(query).getall()
+        if sources is not []:
+            remove_spaces_sources = list(map(lambda x: x.strip(), sources))
+            return list(filter(lambda x: x != "", remove_spaces_sources))
+    return None
+
+
+def categories_selector(html_content):
+    selector = Selector(text=html_content)
     select_categories = selector.css("#js-categories ::text").getall()
     remove_spaces_categories = list(
         map(lambda x: x.strip(), select_categories)
     )
-    data["categories"] = list(
-        filter(lambda x: x != "", remove_spaces_categories)
+    return list(filter(lambda x: x != "", remove_spaces_categories))
+
+
+def scrape_noticia(html_content):
+    selector = Selector(text=html_content)
+    data = {}
+
+    data["url"] = url_selector(html_content)
+    data["title"] = title_selector(html_content)
+    data["timestamp"] = timestamp_selector(html_content)
+    data["writer"] = write_selector(html_content)
+    data["shares_count"] = shares_count_selector(html_content)
+
+    data["comments_count"] = int(
+        selector.css("#js-comments-btn ::attr(data-count)").get()
     )
+    data["summary"] = summary_selector(html_content)
+
+    data["sources"] = summary_sources(html_content)
+
+    data["categories"] = categories_selector(html_content)
 
     return data
 
