@@ -1,6 +1,8 @@
 import requests
 import time
 
+from tech_news.database import create_news
+
 from parsel import Selector
 
 
@@ -21,12 +23,9 @@ def fetch(url):
 
 
 # Requisito 2
-# #js-main > div > div > div.z--col.z--w-2-3 > div.tec--list.tec--list--lg ::a
-# .tec--list--lg > a ::attr(href)
 
 
 def scrape_novidades(html_content):
-    # response = fetch(html_content)
 
     selector = Selector(text=html_content)
 
@@ -87,17 +86,16 @@ def shares_count_selector(html_content):
     return 0
 
 
+# Agradecimentos a Denis Rossati >>
+# https://github.com/tryber/sd-010-b-tech-news/pull/37/commits/ec2dc88e860b2fe62d1d298d5cdc9a738c10123f
 def summary_selector(html_content):
     selector = Selector(text=html_content)
-    summary = "".join(
-        selector.css(".p402_premium > p:nth-child(1) ::text").getall()
+    return "".join(
+        selector.css(".tec--article__body > p:nth-child(1) *::text").getall()
     )
-    if summary is not None:
-        return summary
-    return None
 
 
-def summary_sources(html_content):
+def sources_selector(html_content):
     selector = Selector(text=html_content)
     query_selectors = [
         ".z--mb-16 > div > a ::text",
@@ -135,7 +133,7 @@ def scrape_noticia(html_content):
     )
     data["summary"] = summary_selector(html_content)
 
-    data["sources"] = summary_sources(html_content)
+    data["sources"] = sources_selector(html_content)
 
     data["categories"] = categories_selector(html_content)
 
@@ -148,4 +146,28 @@ def scrape_noticia(html_content):
 
 # Requisito 5
 def get_tech_news(amount):
-    """Seu código deve vir aqui"""
+    # html_content > novidades > pegar qtd = amount >
+    # se o valor amount for maior > acionar scrape_next_page_link
+    # > pegar valor restante e adicionar ao array >
+    # scrape_noticia > adicionar no mongodb
+    # .extends / .append
+    url = "https://www.tecmundo.com.br/novidades"
+    html_content = fetch(url)
+    new_urls = scrape_novidades(html_content)
+
+    tech_news = []
+
+    while len(new_urls) < amount:
+        next_page = scrape_next_page_link(html_content)
+        html_content = fetch(next_page)
+        new_urls.extend(scrape_novidades(html_content))
+
+    for index in range(amount):
+        new_url = new_urls[index]
+        new_page = fetch(new_url)
+        new_info = scrape_noticia(new_page)
+        tech_news.append(new_info)
+
+    create_news(tech_news)
+
+    return tech_news
