@@ -22,6 +22,7 @@ def search_by_title(title):
 def search_by_date(date):
     try:
         print(date)
+# ref https://www.programiz.com/python-programming/datetime/strptime
         datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
         raise ValueError("Data inválida")
