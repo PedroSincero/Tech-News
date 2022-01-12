@@ -6,6 +6,8 @@ from tech_news.database import db
 
 def search_by_title(title):
 
+    # >> ref https://github.com/tryber/sd-010-b-tech-news/pull/37/
+    # commits/543324da3b2df4bbcc831b62619e04deef202b46
     find_title = list(
         db.news.find({"title": re.compile(title, re.IGNORECASE)})
     )
