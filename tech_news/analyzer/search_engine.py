@@ -23,15 +23,14 @@ def search_by_date(date):
     try:
         # ref https://www.programiz.com/python-programming/datetime/strptime
         datetime.strptime(date, "%Y-%m-%d")
+        find_date = list(db.news.find({"timestamp": {"$regex": date}}))
+        result = []
+        for search in find_date:
+            result.append((search["title"], search["url"]))
+        return result
     except ValueError:
         raise ValueError("Data inválida")
     # ref >> https://docs.mongodb.com/manual/reference/operator/query/regex/
-    find_date = list(db.news.find({"timestamp": {"$regex": date}}))
-
-    result = []
-    for search in find_date:
-        result.append((search["title"], search["url"]))
-    return result
 
 
 # Requisito 8
